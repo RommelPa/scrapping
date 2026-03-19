@@ -33,3 +33,40 @@ Datos almacenados en:
 ```bash
 data/coes.db
 ```
+## 1. Clonar repositorio (SSH)
+
+```bash
+git clone git@github.com:RommelPa/scrapping.git
+```
+
+```bash
+cd scrapping
+```
+
+## 2. Crear entorno virtual
+
+```bash
+python -m venv .venv
+```
+
+```bash
+.venv\Scripts\activate
+```
+
+## 3. Instalar dependencias
+
+```bash
+pip install -r requirements.txt
+```
+
+## 4. Estructura necesaria
+
+```bash
+mkdir data\raw
+```
+
+## 5. Ejecutar
+
+```bash
+python main.py
+```
