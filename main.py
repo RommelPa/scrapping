@@ -17,15 +17,13 @@ from src.db import (
     cargar_datos_por_fecha
 )
 
-
 def ordenar_reprog(nombre):
     match = re.search(r"Reprog_\d+([A-Z])", nombre)
     return match.group(1) if match else ""
 
-
 def main():
     init_db()
-    fecha = datetime(2026, 3, 19)
+    fecha = datetime(2026, 3, 22)
 
     os.makedirs("data/raw", exist_ok=True)
 
@@ -34,7 +32,8 @@ def main():
     # ================= PROGRAMA =================
     prog = obtener_programa(fecha)
     if not prog:
-        raise ValueError("No hay programa")
+        print("No se encontró programa diario (posible demora de COES)")
+        return
 
     path_prog = f"data/raw/{prog['nombre']}"
     descargar_archivo(prog["ruta"], path_prog)
@@ -60,10 +59,16 @@ def main():
         df = cargar_datos_por_fecha(fecha.strftime("%Y-%m-%d"))
 
         if df is None or df.empty:
-            raise ValueError("DB inconsistente: no hay datos para la fecha")
+            print("No hay datos previos en DB para esta fecha")
+            return
 
     # ================= REPROGRAMAS =================
-    reprogs = obtener_reprogramas(fecha)
+    try:
+        reprogs = obtener_reprogramas(fecha)
+    except Exception as e:
+        print(f"[ERROR] Fallo al obtener reprogramas: {e}")
+        reprogs = []
+
     reprogs = sorted(reprogs, key=lambda x: ordenar_reprog(x["nombre"]))
 
     print(f"Reprogramas encontrados: {len(reprogs)}")

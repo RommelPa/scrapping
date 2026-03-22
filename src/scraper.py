@@ -44,11 +44,14 @@ def listar_directorio(base_dir: str, ruta: str, initial: str):
         "orderFolder": "D",
     }
 
-    r = session.post(URL_VISTADATOS, data=data)
-    r.raise_for_status()
+    try:
+        r = session.post(URL_VISTADATOS, data=data, timeout=15)
+        r.raise_for_status()
+        return BeautifulSoup(r.text, "html.parser")
 
-    return BeautifulSoup(r.text, "html.parser")
-
+    except requests.exceptions.RequestException as e:
+        print(f"[ERROR COES] No se pudo acceder a: {ruta}")
+        return None
 
 def build_ruta(base, fecha):
     anio = fecha.strftime("%Y")
@@ -85,6 +88,10 @@ def obtener_programa(fecha):
         "Programa de Operación Diario"
     )
 
+    if soup is None:
+        print("No se pudo acceder al programa diario (COES no disponible)")
+        return None
+
     for tr in soup.select("tr.selector-file-contextual"):
         celdas = tr.find_all("td")
 
@@ -99,8 +106,8 @@ def obtener_programa(fecha):
                 "nombre": nombre
             }
 
+    print("No hay programa publicado aún para esta fecha")
     return None
-
 
 # ---------------- REPROGRAMAS ----------------
 
@@ -113,8 +120,16 @@ def obtener_reprogramas(fecha):
         "Reprograma Diario de Operación"
     )
 
+    if soup is None:
+        print("No se pudo acceder a reprogramas (COES no disponible)")
+        return []
+
     carpetas = [n for n in extraer_nombres(soup) if "Reprog" in n]
     carpetas = sorted(carpetas)
+
+    if not carpetas:
+        print("No hay reprogramas publicados aún")
+        return []
 
     archivos = []
 
@@ -126,6 +141,10 @@ def obtener_reprogramas(fecha):
             ruta,
             "Reprograma Diario de Operación"
         )
+
+        if soup_sub is None:
+            print(f"No se pudo acceder a carpeta: {carpeta}")
+            continue
 
         for tr in soup_sub.select("tr.selector-file-contextual"):
             celdas = tr.find_all("td")
